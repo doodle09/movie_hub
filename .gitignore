@@ -24,3 +24,18 @@ data/*.csv
 # OS
 .DS_Store
 Thumbs.db
+
+# Root level large and generated files
+*.csv
+chroma_db/
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# Debug / scratch files
+debug_*.py
+debug_*.txt
+scratch_*.py
+test_*.png
