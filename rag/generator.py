@@ -21,12 +21,16 @@ results provided below. Follow these rules:
 6. Rank recommendations by relevance to the query, not just by rating.
 7. Format your response with clear numbering and movie titles in bold.
 8. If none of the retrieved movies match well, say so honestly.
+9. CRITICAL: If the user asks for movies "like" or "similar to" a specific movie/franchise,
+   you must NEVER recommend that exact movie or sequels/prequels from the same franchise.
+   Instead, recommend DIFFERENT movies that share similar themes, genres, or vibes.
+   For example: "movies like Harry Potter" should suggest Narnia, Percy Jackson, etc. — NOT Harry Potter films.
 
 Respond in a friendly, conversational tone like a knowledgeable film enthusiast."""
 
 USER_PROMPT_TEMPLATE = """
 USER QUERY: {query}
-
+{exclusion_note}
 RETRIEVED MOVIES FROM DATABASE:
 {context}
 
@@ -35,7 +39,8 @@ with explanations. Recommend up to 5 movies that best match the query.
 """
 
 
-def generate_recommendations(query, context, api_key=None):
+
+def generate_recommendations(query, context, api_key=None, exclusion_note=""):
     """
     Generate movie recommendations using Google Gemini with Key Rotation.
     """
@@ -51,7 +56,7 @@ def generate_recommendations(query, context, api_key=None):
             "is_fallback": True
         }
 
-    user_prompt = USER_PROMPT_TEMPLATE.format(query=query, context=context)
+    user_prompt = USER_PROMPT_TEMPLATE.format(query=query, context=context, exclusion_note=exclusion_note)
     last_error = ""
 
     for key in keys_pool:

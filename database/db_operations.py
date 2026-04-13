@@ -56,24 +56,6 @@ def update_preferences(username, preferences):
 
 # ==================== MOVIE OPERATIONS ====================
 
-def get_movie_by_id(movie_id):
-    """Get a single movie by its ID, including genres."""
-    conn = get_connection()
-    movie = conn.execute(
-        "SELECT * FROM Movies WHERE movie_id = ?", (movie_id,)
-    ).fetchone()
-
-    if movie:
-        movie = dict(movie)
-        genres = conn.execute("""
-            SELECT g.genre_name FROM Genres g
-            JOIN Movie_Genre mg ON g.genre_id = mg.genre_id
-            WHERE mg.movie_id = ?
-        """, (movie_id,)).fetchall()
-        movie["genres"] = [g["genre_name"] for g in genres]
-
-    conn.close()
-    return movie
 
 
 def get_movies_by_genre(genre_name, limit=50):
@@ -149,6 +131,24 @@ def get_movie_by_id(movie_id):
     if movie:
         return dict(movie)
     return None
+
+
+def get_movies_by_ids(movie_ids):
+    """Batch-fetch multiple movies by ID in a single query. Returns dict keyed by movie_id."""
+    if not movie_ids:
+        return {}
+    conn = get_connection()
+    placeholders = ",".join("?" for _ in movie_ids)
+    rows = conn.execute(f"""
+        SELECT m.*, GROUP_CONCAT(g.genre_name, ', ') as genres
+        FROM Movies m
+        LEFT JOIN Movie_Genre mg ON m.movie_id = mg.movie_id
+        LEFT JOIN Genres g ON mg.genre_id = g.genre_id
+        WHERE m.movie_id IN ({placeholders})
+        GROUP BY m.movie_id
+    """, list(movie_ids)).fetchall()
+    conn.close()
+    return {row["movie_id"]: dict(row) for row in rows}
 
 def get_movie_stats():
     """Get aggregate statistics for the EDA dashboard."""

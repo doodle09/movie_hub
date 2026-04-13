@@ -7,29 +7,42 @@ from chromadb.utils import embedding_functions
 from database.db_setup import get_connection
 from utils.helpers import CHROMA_DIR, EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, MIN_OVERVIEW_LENGTH
 
+# ---- Module-level singletons (created once, reused forever) ----
+_embedding_fn = None
+_chroma_client = None
+_collection = None
+
 
 def get_embedding_function():
-    """Get the sentence-transformer embedding function for ChromaDB."""
-    return embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=EMBEDDING_MODEL_NAME
-    )
+    """Get the sentence-transformer embedding function for ChromaDB (cached)."""
+    global _embedding_fn
+    if _embedding_fn is None:
+        _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=EMBEDDING_MODEL_NAME
+        )
+    return _embedding_fn
 
 
 def get_chroma_client():
-    """Get a persistent ChromaDB client."""
-    return chromadb.PersistentClient(path=str(CHROMA_DIR))
+    """Get a persistent ChromaDB client (cached)."""
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    return _chroma_client
 
 
 def get_or_create_collection():
-    """Get or create the movies ChromaDB collection."""
-    client = get_chroma_client()
-    ef = get_embedding_function()
-    collection = client.get_or_create_collection(
-        name=CHROMA_COLLECTION_NAME,
-        embedding_function=ef,
-        metadata={"hnsw:space": "cosine"}
-    )
-    return collection
+    """Get or create the movies ChromaDB collection (cached)."""
+    global _collection
+    if _collection is None:
+        client = get_chroma_client()
+        ef = get_embedding_function()
+        _collection = client.get_or_create_collection(
+            name=CHROMA_COLLECTION_NAME,
+            embedding_function=ef,
+            metadata={"hnsw:space": "cosine"}
+        )
+    return _collection
 
 
 def build_vectorstore(progress_callback=None):

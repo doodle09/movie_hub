@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont
 
-from utils.theme_engine import get_accent
+from utils.theme_engine import get_colors
 from database.db_operations import get_all_movies_dataframe, get_all_genres
 
 
@@ -16,6 +16,7 @@ class AnalyticsView(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        self.c = get_colors()
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(40, 40, 40, 40)
@@ -24,7 +25,6 @@ class AnalyticsView(QWidget):
         header = QHBoxLayout()
         title = QLabel("Platform Insights")
         title.setFont(QFont("Segoe UI", 28, QFont.Weight.Bold))
-        title.setStyleSheet("color: white;")
         header.addWidget(title)
         header.addStretch()
 
@@ -56,6 +56,7 @@ class AnalyticsView(QWidget):
         self.refresh_charts()
 
     def refresh_charts(self, *args):
+        c = self.c
         selected_genre = self.genre_combo.currentText()
 
         if selected_genre == "All Genres":
@@ -69,8 +70,6 @@ class AnalyticsView(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-        accent = get_accent()
-
         metrics = [
             ("Total Films", f"{len(df):,}"),
             ("Average Rating", f"{df['vote_average'].mean():.1f}" if len(df) > 0 else "0.0"),
@@ -79,42 +78,45 @@ class AnalyticsView(QWidget):
 
         for label_text, val in metrics:
             card = QFrame()
-            card.setStyleSheet("QFrame { background-color: #18181B; border-radius: 12px; }")
+            card.setStyleSheet(f"QFrame {{ background-color: {c['bg_card']}; border-radius: 12px; }}")
             c_layout = QVBoxLayout(card)
             c_layout.setContentsMargins(30, 25, 30, 25)
 
             lbl = QLabel(label_text)
-            lbl.setStyleSheet("color: #A1A1AA; font-size: 14px; font-weight: bold;")
+            lbl.setStyleSheet(f"color: {c['text_secondary']}; font-size: 14px; font-weight: bold;")
             c_layout.addWidget(lbl)
 
             v_lbl = QLabel(val)
-            v_lbl.setStyleSheet(f"color: {accent}; font-size: 32px; font-weight: bold;")
+            v_lbl.setStyleSheet(f"color: {c['accent']}; font-size: 32px; font-weight: bold;")
             c_layout.addWidget(v_lbl)
 
             self.stats_layout.addWidget(card)
 
         if len(df) > 0:
-            self.draw_charts(df, accent)
+            self.draw_charts(df)
 
-    def draw_charts(self, df, accent_color):
+    def draw_charts(self, df):
         if self.canvas_widget:
             self.canvas_widget.deleteLater()
             self.canvas_widget = None
 
-        bg_col = "#0E0E10"
-        fg_col = "#FFFFFF"
-        grid_col = "#27272A"
+        c = self.c
+        bg = c["chart_bg"]
+        fg = c["chart_text"]
+        grid = c["chart_grid"]
+        accent = c["chart_accent"]
+        secondary = c["chart_secondary"]
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor=bg_col)
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor=bg)
 
         for ax in [ax1, ax2]:
-            ax.set_facecolor(bg_col)
+            ax.set_facecolor(bg)
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
-            ax.spines["left"].set_color(grid_col)
-            ax.spines["bottom"].set_color(grid_col)
-            ax.tick_params(colors=fg_col, labelsize=9)
-            ax.yaxis.grid(True, linestyle="--", color=grid_col, alpha=0.5)
+            ax.spines["left"].set_color(grid)
+            ax.spines["bottom"].set_color(grid)
+            ax.tick_params(colors=fg, labelsize=9)
+            ax.yaxis.grid(True, linestyle="--", color=grid, alpha=0.5)
             ax.xaxis.grid(False)
 
         # Plot 1: Rating Distribution
@@ -123,16 +125,16 @@ class AnalyticsView(QWidget):
             rating_hist = pd.cut(valid_ratings, bins=15).value_counts().sort_index()
             bins = [interval.mid for interval in rating_hist.index]
             counts = rating_hist.values
-            ax1.fill_between(bins, counts, color=accent_color, alpha=0.2)
-            ax1.plot(bins, counts, color=accent_color, linewidth=2.5)
-            ax1.set_title("Audience Ratings Distribution", color=fg_col, pad=15, weight="bold", size=13)
+            ax1.fill_between(bins, counts, color=accent, alpha=0.2)
+            ax1.plot(bins, counts, color=accent, linewidth=2.5)
+            ax1.set_title("Audience Ratings Distribution", color=fg, pad=15, weight="bold", size=13)
 
         # Plot 2: Most Popular Movies
         top_movies = df.nlargest(8, "popularity").sort_values("popularity", ascending=True)
         if not top_movies.empty:
             titles = [t[:18] + "…" if len(t) > 18 else t for t in top_movies["title"]]
-            ax2.barh(titles, top_movies["popularity"], height=0.5, color="#FF375F")
-            ax2.set_title("Trending Popularity Scores", color=fg_col, pad=15, weight="bold", size=13)
+            ax2.barh(titles, top_movies["popularity"], height=0.5, color=secondary)
+            ax2.set_title("Trending Popularity Scores", color=fg, pad=15, weight="bold", size=13)
 
         plt.tight_layout(pad=3.0)
 

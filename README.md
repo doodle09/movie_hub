@@ -6,56 +6,65 @@ An intelligent movie recommendation system built using **Retrieval-Augmented Gen
 
 - **🔍 Natural Language Search** — Describe the movie you want in plain English
 - **🤖 AI Recommendations** — Google Gemini generates personalized explanations
-- **📊 EDA Dashboard** — 8 interactive visualizations exploring movie trends
-- **👤 User Profiles** — Track search history and save preferences
+- **📊 EDA Dashboard** — Interactive visualizations exploring movie trends
 - **🎯 Smart Filtering** — Filter by genre, rating, and more
+- **🎨 Theming** — Customizable accent colors and dark UI
 
 ## 🛠️ Tech Stack
 
 | Component | Technology |
 |---|---|
-| Frontend | Streamlit |
+| Desktop GUI | PyQt6 |
 | LLM | Google Gemini Flash |
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
 | Vector DB | ChromaDB |
 | Database | SQLite |
-| Visualization | Plotly |
-| Dataset | TMDB 5000 Movies (Kaggle) |
+| Visualization | Matplotlib |
+| Dataset | TMDB Movies (Kaggle) |
 
 ## 🏗️ Architecture
 
 ```
-User Query → Embedding → ChromaDB Similarity Search → Top-K Results
-                                                          ↓
-                                           Google Gemini (LLM) + Context
-                                                          ↓
-                                              AI Recommendations
+User Query → Query Parser (Gemini) → Structured Filters
+                                          ↓
+         Refined Query → Embedding → ChromaDB Similarity Search → Top-K Results
+                                                                       ↓
+                                                        Google Gemini (LLM) + Context
+                                                                       ↓
+                                                          AI Recommendations → PyQt6 UI
 ```
 
 ## 📁 Project Structure
 
 ```
 college_project/
-├── app.py                          # Main Streamlit entry point
+├── desktop_app.py                  # Main PyQt6 entry point
 ├── requirements.txt                # Dependencies
-├── tmdb_5000_movies.csv            # Dataset
+├── TMDB_movie_dataset_v11.csv      # Dataset
+├── configs/
+│   └── api_keys.json               # Gemini API key pool
 ├── database/
 │   ├── db_setup.py                 # Schema creation & data loading
 │   └── db_operations.py            # CRUD operations
 ├── embeddings/
 │   └── vectorstore.py              # ChromaDB + sentence-transformers
 ├── rag/
-│   ├── retriever.py                # Similarity search
+│   ├── query_parser.py             # LLM-powered query extraction
+│   ├── retriever.py                # Similarity search + enrichment
 │   ├── generator.py                # Gemini LLM integration
 │   └── pipeline.py                 # End-to-end RAG orchestration
 ├── eda/
-│   └── visualizations.py           # Plotly charts
-├── pages/
-│   ├── 1_🔍_Discover.py           # RAG search page
-│   ├── 2_📊_Analytics.py          # EDA dashboard
-│   └── 3_👤_Profile.py            # User profile
+│   └── visualizations.py           # Analytics charts
+├── gui/
+│   ├── main_window.py              # Main window with sidebar navigation
+│   ├── discover_view.py            # RAG search page with hero banner
+│   ├── analytics_view.py           # EDA dashboard
+│   └── settings_view.py            # API key & theme configuration
 └── utils/
-    └── helpers.py                  # Shared configuration
+    ├── helpers.py                  # Shared constants & configuration
+    ├── config_manager.py           # API key pool management
+    ├── image_manager.py            # Async poster loading & caching
+    └── theme_engine.py             # App-wide stylesheet generation
 ```
 
 ## 🚀 Setup & Installation
@@ -77,20 +86,21 @@ pip install -r requirements.txt
 ```
 GOOGLE_API_KEY=your_key_here
 ```
+Or add keys via the **Settings** page inside the app.
 
 ### 4. Dataset
-Place the `tmdb_5000_movies.csv` file in the project root.
+Place the `TMDB_movie_dataset_v11.csv` file in the project root.
 Download from [Kaggle](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata).
 
 ### 5. Run the App
 ```bash
-streamlit run app.py
+python desktop_app.py
 ```
 
 ### 6. First-Time Setup
 1. The database will initialize automatically on first run
-2. Click **"Build Vector Store"** in the sidebar (takes 2-3 minutes)
-3. Enter your Gemini API key in the sidebar
+2. The vector store builds automatically if not already present
+3. Add your Gemini API key(s) via the **Settings** page
 4. Start searching! 🎬
 
 ## 📊 ER Diagram

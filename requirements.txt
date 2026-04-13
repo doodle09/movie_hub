@@ -8,3 +8,4 @@ PyQt6>=6.5.0
 pyqtdarktheme>=0.1.7
 Pillow>=10.0.0
 requests>=2.31.0
+pyinstaller>=6.0.0

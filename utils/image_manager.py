@@ -31,7 +31,7 @@ class ImageManager:
     _cache = {}
 
     @staticmethod
-    def load_image_async(url, label_widget, is_banner=False, radius=0, target_width=None, target_height=None, bg_color=(14, 14, 16, 255)):
+    def load_image_async(url, label_widget, is_banner=False, radius=0, target_width=None, target_height=None, bg_color=(10, 10, 15, 255)):
         cache_key = f"{url}_{is_banner}_{radius}_{target_width}x{target_height}"
         
         if cache_key in ImageManager._cache:
@@ -113,7 +113,7 @@ class ImageManager:
             alpha = int(255 * (1 - (y / height) ** 1.8))
             draw.line((0, y, width, y), fill=alpha)
             
-        bg = Image.new('RGBA', (width, height), color=(14, 14, 16, 255))
+        bg = Image.new('RGBA', (width, height), color=(10, 10, 15, 255))
         img.putalpha(gradient)
         return Image.alpha_composite(bg, img)
 
