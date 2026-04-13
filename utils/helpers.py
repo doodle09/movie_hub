@@ -2,7 +2,6 @@
 Shared utility functions and configuration for the Movie Discovery System.
 """
 import os
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -10,16 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Path Configuration ---
-# When packaged with PyInstaller, sys._MEIPASS points to the temp bundle dir.
-# We use the directory containing the executable as PROJECT_ROOT so that
-# writable / user-editable data (DB, configs) lives next to the .exe.
-if getattr(sys, 'frozen', False):
-    # Running as a PyInstaller bundle
-    PROJECT_ROOT = Path(sys.executable).parent
-else:
-    # Running in a normal Python environment
-    PROJECT_ROOT = Path(__file__).parent.parent
-
+PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 DB_PATH = PROJECT_ROOT / "movie_discovery.db"
 CHROMA_DIR = PROJECT_ROOT / "embeddings" / "chroma_db"
